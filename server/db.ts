@@ -1,19 +1,22 @@
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
-import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
-import pg from "pg";
 import * as schema from "../shared/schema";
 
-let db: any;
+const sqlite = new Database("rooms.db");
+const db = drizzle(sqlite, { schema });
 
-if (process.env.DATABASE_URL) {
-    const pool = new pg.Pool({
-        connectionString: process.env.DATABASE_URL,
-    });
-    db = drizzlePg(pool, { schema });
-} else {
-    const sqlite = new Database("rooms.db");
-    db = drizzle(sqlite, { schema });
-}
+// Ensure table exists
+sqlite.exec(`
+  CREATE TABLE IF NOT EXISTS rooms (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_code TEXT UNIQUE NOT NULL,
+    player1 TEXT NOT NULL,
+    player2 TEXT,
+    status TEXT DEFAULT 'waiting',
+    day TEXT DEFAULT 'rose_day',
+    created_at INTEGER,
+    game_data TEXT DEFAULT '{}'
+  );
+`);
 
 export { db };
