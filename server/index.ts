@@ -81,7 +81,9 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
-    const { setupVite } = await import("./vite");
+    // @ts-ignore
+    const vitePath = "./vite";
+    const { setupVite } = await import(vitePath);
     await setupVite(httpServer, app);
   }
 

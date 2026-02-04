@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "CommonJS",
+        "moduleResolution": "Node",
+        "outDir": "dist",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "baseUrl": ".",
+        "noEmit": false
+    },
+    "include": [
+        "server/**/*",
+        "shared/**/*"
+    ],
+    "exclude": [
+        "client",
+        "node_modules",
+        "**/*.test.ts",
+        "server/vite.ts",
+        "shared/routes.ts"
+    ]
+}

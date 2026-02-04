@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
-import { insertRoomSchema } from "@shared/schema";
+import { insertRoomSchema } from "../shared/schema";
 
 export async function registerRoutes(
   httpServer: Server,

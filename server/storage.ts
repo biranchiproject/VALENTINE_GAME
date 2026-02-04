@@ -1,4 +1,4 @@
-import { rooms, roomsPg, type Room, type InsertRoom } from "@shared/schema";
+import { rooms, roomsPg, type Room, type InsertRoom } from "../shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
