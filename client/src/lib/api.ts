@@ -1,6 +1,7 @@
 export const api = {
     async createRoom(playerName: string, day: string) {
-        const res = await fetch("/api/room/create", {
+        const BASE_URL = import.meta.env.VITE_API_URL || "";
+        const res = await fetch(`${BASE_URL}/api/room/create`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ playerName, day }),
@@ -10,7 +11,8 @@ export const api = {
     },
 
     async joinRoom(roomCode: string, playerName: string, day: string) {
-        const res = await fetch("/api/room/join", {
+        const BASE_URL = import.meta.env.VITE_API_URL || "";
+        const res = await fetch(`${BASE_URL}/api/room/join`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ roomCode, playerName, day }),
@@ -20,13 +22,15 @@ export const api = {
     },
 
     async getRoomState(roomCode: string) {
-        const res = await fetch(`/api/room/${roomCode}`);
+        const BASE_URL = import.meta.env.VITE_API_URL || "";
+        const res = await fetch(`${BASE_URL}/api/room/${roomCode}`);
         if (!res.ok) throw new Error("Failed to fetch room");
         return res.json();
     },
 
     async submitAnswer(roomCode: string, playerName: string, day: number, response: any) {
-        const res = await fetch("/api/room/submit", {
+        const BASE_URL = import.meta.env.VITE_API_URL || "";
+        const res = await fetch(`${BASE_URL}/api/room/submit`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ roomCode, playerName, day, response }),
@@ -36,7 +40,8 @@ export const api = {
     },
 
     async submitReview(roomCode: string, playerName: string, reviews: any) {
-        const res = await fetch("/api/room/review", {
+        const BASE_URL = import.meta.env.VITE_API_URL || "";
+        const res = await fetch(`${BASE_URL}/api/room/review`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ roomCode, playerName, reviews }),
