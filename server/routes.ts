@@ -9,27 +9,40 @@ export async function registerRoutes(
 ): Promise<Server> {
 
   // POST /api/room/create
+  // POST /api/room/create
   app.post("/api/room/create", async (req, res) => {
     try {
+      if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({ message: "Invalid request body" });
+      }
+
       const { playerName, day } = req.body;
-      if (!playerName) return res.status(400).send("Player name required");
+
+      if (!playerName || typeof playerName !== 'string' || !playerName.trim()) {
+        return res.status(400).json({ message: "Player name is required" });
+      }
 
       // Generate 6-digit code
       const roomCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-      // Create Room
-      const room = await storage.createRoom({
-        roomCode,
-        player1: playerName,
-        status: "waiting",
-        day: day || "rose_day"
-      });
+      try {
+        // Create Room
+        const room = await storage.createRoom({
+          roomCode,
+          player1: playerName.trim(),
+          status: "waiting",
+          day: day || "rose_day"
+        });
 
-      console.log(`Room created: ${roomCode} by ${playerName}`);
-      res.json({ roomCode });
+        console.log(`[CREATE] Room created: ${roomCode} by ${playerName}`);
+        res.status(201).json({ roomCode, success: true });
+      } catch (storageError) {
+        console.error("[CREATE] Storage Error:", storageError);
+        res.status(500).json({ message: "Failed to create room in database" });
+      }
     } catch (e) {
-      console.error(e);
-      res.status(500).send("Server Error");
+      console.error("[CREATE] Unexpected Error:", e);
+      res.status(500).json({ message: "Internal Server Error" });
     }
   });
 
