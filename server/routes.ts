@@ -1,8 +1,7 @@
 import type { Express } from "express";
 import type { Server } from "http";
-import { db } from "./db";
-import { rooms } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { storage } from "./storage";
+import { insertRoomSchema } from "@shared/schema";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -19,7 +18,7 @@ export async function registerRoutes(
       const roomCode = Math.floor(100000 + Math.random() * 900000).toString();
 
       // Create Room
-      await db.insert(rooms).values({
+      const room = await storage.createRoom({
         roomCode,
         player1: playerName,
         status: "waiting",
@@ -38,12 +37,11 @@ export async function registerRoutes(
   app.post("/api/room/submit", async (req, res) => {
     try {
       const { roomCode, playerName, day, response } = req.body;
-      const result = await db.select().from(rooms).where(eq(rooms.roomCode, roomCode));
-      const room = result[0];
+      const room = await storage.getRoomByCode(roomCode);
 
       if (!room) return res.status(404).json({ message: "Room not found" });
 
-      const gameData = room.gameData as any; // Type assertion since it's cleaner than strict typing here
+      const gameData = room.gameData as any; // Type assertion
 
       // Update answers
       if (!gameData.answers) gameData.answers = {};
@@ -54,7 +52,6 @@ export async function registerRoutes(
       gameData.submissionStatus[playerName] = true;
 
       // Check if both players submitted
-      // We assume player1 is always there. Check player2.
       const p1 = room.player1;
       const p2 = room.player2;
 
@@ -69,9 +66,7 @@ export async function registerRoutes(
         console.log(`[SUBMIT] Waiting for other player...`);
       }
 
-      await db.update(rooms)
-        .set({ gameData })
-        .where(eq(rooms.roomCode, roomCode));
+      await storage.updateRoom(roomCode, gameData);
 
       res.json({ success: true });
     } catch (e) {
@@ -84,8 +79,7 @@ export async function registerRoutes(
   app.post("/api/room/review", async (req, res) => {
     try {
       const { roomCode, playerName, reviews } = req.body;
-      const result = await db.select().from(rooms).where(eq(rooms.roomCode, roomCode));
-      const room = result[0];
+      const room = await storage.getRoomByCode(roomCode);
 
       if (!room) return res.status(404).json({ message: "Room not found" });
 
@@ -104,7 +98,7 @@ export async function registerRoutes(
 
       console.log(`[REVIEW] Check: P1=${p1}, P2=${p2}`);
       console.log(`[REVIEW] P1 Reviews:`, gameData.reviews[p1] ? "Present" : "Missing");
-      console.log(`[REVIEW] P2 Reviews:`, gameData.reviews[p2] ? "Present" : "Missing");
+      console.log(`[REVIEW] P2 Reviews:`, (p2 && gameData.reviews[p2]) ? "Present" : "Missing");
 
       if (p1 && p2 && gameData.reviews[p1] && gameData.reviews[p2]) {
         gameData.bothReviewed = true;
@@ -113,9 +107,7 @@ export async function registerRoutes(
         console.log(`[REVIEW] Waiting for other player...`);
       }
 
-      await db.update(rooms)
-        .set({ gameData })
-        .where(eq(rooms.roomCode, roomCode));
+      await storage.updateRoom(roomCode, gameData);
 
       res.json({ success: true });
     } catch (e) {
@@ -128,8 +120,7 @@ export async function registerRoutes(
   app.post("/api/room/join", async (req, res) => {
     try {
       const { roomCode, playerName, day } = req.body;
-      const result = await db.select().from(rooms).where(eq(rooms.roomCode, roomCode));
-      const room = result[0];
+      const room = await storage.getRoomByCode(roomCode);
 
       if (!room) return res.status(404).json({ message: "Invalid room code" });
 
@@ -146,9 +137,7 @@ export async function registerRoutes(
 
       // If re-joining or new join
       if (!room.player2) {
-        await db.update(rooms)
-          .set({ player2: playerName, status: "ready" })
-          .where(eq(rooms.roomCode, roomCode));
+        await storage.updateRoom(roomCode, room.gameData, playerName, "ready");
         console.log(`${playerName} joined room ${roomCode}`);
       }
 
@@ -163,8 +152,7 @@ export async function registerRoutes(
   app.get("/api/room/:roomCode", async (req, res) => {
     try {
       const { roomCode } = req.params;
-      const result = await db.select().from(rooms).where(eq(rooms.roomCode, roomCode));
-      const room = result[0];
+      const room = await storage.getRoomByCode(roomCode);
 
       if (!room) return res.status(404).json({ message: "Room not found" });
 

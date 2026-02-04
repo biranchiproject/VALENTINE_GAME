@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { pgTable, text as pgText, serial, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -24,6 +25,28 @@ export const rooms = sqliteTable("rooms", {
   }),
 });
 
+export const roomsPg = pgTable("rooms", {
+  id: serial("id").primaryKey(),
+  roomCode: pgText("room_code").notNull().unique(),
+  player1: pgText("player1").notNull(),
+  player2: pgText("player2"),
+  status: pgText("status").notNull().default("waiting"),
+  day: pgText("day").notNull().default("rose_day"),
+  createdAt: timestamp("created_at").defaultNow(),
+  gameData: jsonb("game_data").$type<{
+    answers: Record<string, Record<string, string>>;
+    reviews: Record<string, Record<string, boolean>>;
+    submissionStatus: Record<string, boolean>;
+    bothSubmitted: boolean;
+    bothReviewed?: boolean;
+  }>().default({
+    answers: {},
+    reviews: {},
+    submissionStatus: {},
+    bothSubmitted: false
+  }),
+});
+
 export const insertRoomSchema = createInsertSchema(rooms).pick({
   roomCode: true,
   player1: true,
@@ -32,4 +55,4 @@ export const insertRoomSchema = createInsertSchema(rooms).pick({
 });
 
 export type Room = typeof rooms.$inferSelect;
-
+export type InsertRoom = typeof rooms.$inferInsert;

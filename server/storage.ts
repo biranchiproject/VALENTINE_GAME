@@ -1,49 +1,62 @@
+import { rooms, roomsPg, type Room, type InsertRoom } from "@shared/schema";
 import { db } from "./db";
-import { rooms, players, answers, type Room, type Player, type Answer, type CreateRoomRequest, type JoinRoomRequest, type SubmitAnswerRequest } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
-  // Room ops
-  createRoom(code: string): Promise<Room>;
+  createRoom(room: InsertRoom): Promise<Room>;
   getRoomByCode(code: string): Promise<Room | undefined>;
-  
-  // Player ops
-  addPlayer(roomCode: string, name: string): Promise<Player>;
-  getPlayers(roomCode: string): Promise<Player[]>;
-  
-  // Answer ops
-  submitAnswer(answer: SubmitAnswerRequest): Promise<Answer>;
-  getAnswers(roomCode: string): Promise<Answer[]>;
+  updateRoom(roomCode: string, gameData: any, player2?: string, status?: string): Promise<Room>;
 }
 
-export class DatabaseStorage implements IStorage {
-  async createRoom(code: string): Promise<Room> {
-    const [room] = await db.insert(rooms).values({ code }).returning();
+export class SqliteStorage implements IStorage {
+  async createRoom(insertRoom: InsertRoom): Promise<Room> {
+    const [room] = await db.insert(rooms).values(insertRoom).returning();
     return room;
   }
 
   async getRoomByCode(code: string): Promise<Room | undefined> {
-    const [room] = await db.select().from(rooms).where(eq(rooms.code, code));
+    const [room] = await db.select().from(rooms).where(eq(rooms.roomCode, code));
     return room;
   }
 
-  async addPlayer(roomCode: string, name: string): Promise<Player> {
-    const [player] = await db.insert(players).values({ roomCode, name }).returning();
-    return player;
-  }
+  async updateRoom(roomCode: string, gameData: any, player2?: string, status?: string): Promise<Room> {
+    // Construct update object dynamically
+    const updateData: any = { gameData };
+    if (player2) updateData.player2 = player2;
+    if (status) updateData.status = status;
 
-  async getPlayers(roomCode: string): Promise<Player[]> {
-    return await db.select().from(players).where(eq(players.roomCode, roomCode));
-  }
-
-  async submitAnswer(answer: SubmitAnswerRequest): Promise<Answer> {
-    const [submitted] = await db.insert(answers).values(answer).returning();
-    return submitted;
-  }
-
-  async getAnswers(roomCode: string): Promise<Answer[]> {
-    return await db.select().from(answers).where(eq(answers.roomCode, roomCode));
+    const [updatedRoom] = await db
+      .update(rooms)
+      .set(updateData)
+      .where(eq(rooms.roomCode, roomCode))
+      .returning();
+    return updatedRoom;
   }
 }
 
-export const storage = new DatabaseStorage();
+export class PostgresStorage implements IStorage {
+  async createRoom(insertRoom: InsertRoom): Promise<Room> {
+    const [room] = await db.insert(roomsPg).values(insertRoom).returning();
+    return room;
+  }
+
+  async getRoomByCode(code: string): Promise<Room | undefined> {
+    const [room] = await db.select().from(roomsPg).where(eq(roomsPg.roomCode, code));
+    return room;
+  }
+
+  async updateRoom(roomCode: string, gameData: any, player2?: string, status?: string): Promise<Room> {
+    const updateData: any = { gameData };
+    if (player2) updateData.player2 = player2;
+    if (status) updateData.status = status;
+
+    const [updatedRoom] = await db
+      .update(roomsPg)
+      .set(updateData)
+      .where(eq(roomsPg.roomCode, roomCode))
+      .returning();
+    return updatedRoom;
+  }
+}
+
+export const storage = new (process.env.DATABASE_URL ? PostgresStorage : SqliteStorage)();
