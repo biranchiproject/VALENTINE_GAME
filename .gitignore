@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+rooms.db
+sqlite.db
+error.log
+error_cmd.log
+.local

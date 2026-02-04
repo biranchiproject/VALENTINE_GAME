@@ -1,0 +1,190 @@
+Create a full React.js web game called:
+
+💖 “LOVE BOND – Valentine Week Couple Game” 💖
+
+This is a real-time, romantic, neon-style couple bonding game designed for Valentine Week
+(February 7 to February 14).
+
+========================
+TECH STACK
+========================
+- React.js (Vite or CRA)
+- CSS / Tailwind CSS
+- Neon glow effects
+- LocalStorage for data storage (no backend for now)
+- Mobile + Desktop responsive
+
+========================
+THEME & UI
+========================
+- Background: Pure black
+- Floating small pink neon hearts in background (animated)
+- Neon glow colors: Pink, Red, Soft White
+- Smooth transitions & romantic animations
+- Modern game-style UI
+
+========================
+HOME PAGE
+========================
+Title: “Love Bond ❤️”
+
+Two buttons:
+1. Create Lover Room
+2. Join Lover Room
+
+========================
+CREATE LOVER ROOM
+========================
+- User enters their name
+- Click “Create Room”
+- Generate a unique 6-digit room code
+- Store room code + player 1 name in localStorage
+- Show message:
+  “Waiting for your love to join 💌”
+- Display room code clearly
+
+========================
+JOIN LOVER ROOM
+========================
+- User enters:
+  - Their name
+  - Room code
+- Validate room code
+- If valid → join room
+- If invalid → neon error message
+
+========================
+ROOM SCREEN (AFTER BOTH JOIN)
+========================
+- Player 1 name on LEFT
+- Player 2 name on RIGHT
+- Center: Big UNFILLED NEON HEART
+- Below heart text:
+  “Complete Valentine Day, My Dear Love ❤️”
+
+========================
+VALENTINE WEEK SYSTEM
+========================
+- Game runs from Feb 7 to Feb 14
+- Total 8 days
+- Each day unlocks ONE COMPLETELY DIFFERENT GAME
+- NO game repeats
+- Game unlocks automatically based on real date
+- Same game shown to both players
+- One couple = one room
+- One couple = ONLY ONE CHANCE PER DAY
+
+========================
+DAY-WISE UNIQUE GAMES
+========================
+Day 1 (Feb 7 – Rose Day):
+- Love Choice Match
+
+Day 2 (Feb 8 – Propose Day):
+- How Well You Know Me?
+
+Day 3 (Feb 9 – Chocolate Day):
+- Mood Sync Game
+
+Day 4 (Feb 10 – Teddy Day):
+- Memory Touch Game
+
+Day 5 (Feb 11 – Promise Day):
+- Promise Builder Game
+
+Day 6 (Feb 12 – Hug Day):
+- Reaction Match Game
+
+Day 7 (Feb 13 – Kiss Day):
+- Love Priority Game
+
+Day 8 (Feb 14 – Valentine’s Day):
+- Final Soul Test
+
+========================
+GAME RULES
+========================
+- Both players answer the same game
+- Answers are locked after submission
+- If answers match → strong bonding
+- If answers differ → weak bonding
+- Game can be played ONLY ONCE PER DAY
+- Future day games remain LOCKED
+- Previous day games are VIEW ONLY
+
+========================
+HEART FILL SYSTEM
+========================
+- Heart starts empty
+- Each day contributes to heart fill
+- Strong match = higher fill
+- Weak match = lower fill
+- Heart fills smoothly with animation
+- Heart brightness increases with bonding
+- Final heart fill shows relationship strength
+
+========================
+DAY COMPLETION CELEBRATION SCREEN
+========================
+After completing each day’s game, show a full-screen celebration:
+
+Text:
+“Congratulations 💖
+Both of You Completed Day X”
+
+Show day-based celebration message:
+
+- Day 1: 🌹 Happy Rose Day
+- Day 2: 💍 Happy Propose Day
+- Day 3: 🍫 Happy Chocolate Day
+- Day 4: 🧸 Happy Teddy Day
+- Day 5: 🤝 Happy Promise Day
+- Day 6: 🤗 Happy Hug Day
+- Day 7: 😘 Happy Kiss Day
+- Day 8: ❤️ Happy Valentine’s Day
+
+- Neon icons + floating hearts
+- Celebration screen appears ONLY ONCE per day
+- Next day remains locked until real date changes
+
+========================
+FINAL RESULT SCREEN (AFTER DAY 8)
+========================
+- Player 1 name on LEFT
+- Player 2 name on RIGHT
+- Center: Fully or partially filled heart
+- Message based on heart percentage:
+  - 80–100% → “Perfect Love Match 💖”
+  - 50–79% → “Beautiful Bond 💞”
+  - Below 50% → “Love Needs Time 💔”
+
+========================
+DATA STORAGE (LOCALSTORAGE)
+========================
+Store:
+- Room code
+- Player names
+- Daily answers
+- Completed days
+- Last played date
+- Heart fill percentage
+
+Prevent replaying the same day.
+
+========================
+EXTRA UI DETAILS
+========================
+- Neon hover buttons
+- Heart beat animation on match
+- Smooth transitions
+- Romantic feel
+- Clean, modular React components
+- Well-commented code
+
+========================
+IMPORTANT
+========================
+- Everything must be automatic and date-driven
+- No manual game switching
+- No repeated games
+- One day = one game = one chance
