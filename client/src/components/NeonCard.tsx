@@ -1,25 +1,26 @@
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
-export function NeonCard({ 
-  children, 
-  className, 
+export function NeonCard({
+  children,
+  className,
   glowColor = "pink",
-  delay = 0 
-}: { 
-  children: React.ReactNode; 
+  delay = 0
+}: {
+  children: React.ReactNode;
   className?: string;
-  glowColor?: "pink" | "red" | "purple";
+  glowColor?: "pink" | "red" | "purple" | "green";
   delay?: number;
 }) {
   const glows = {
     pink: "border-primary/50 shadow-[0_0_15px_-3px_rgba(255,0,127,0.2)] hover:shadow-[0_0_25px_-5px_rgba(255,0,127,0.4)]",
     red: "border-secondary/50 shadow-[0_0_15px_-3px_rgba(255,0,0,0.2)] hover:shadow-[0_0_25px_-5px_rgba(255,0,0,0.4)]",
-    purple: "border-accent/50 shadow-[0_0_15px_-3px_rgba(168,85,247,0.2)] hover:shadow-[0_0_25px_-5px_rgba(168,85,247,0.4)]"
+    purple: "border-accent/50 shadow-[0_0_15px_-3px_rgba(168,85,247,0.2)] hover:shadow-[0_0_25px_-5px_rgba(168,85,247,0.4)]",
+    green: "border-green-500/50 shadow-[0_0_15px_-3px_rgba(34,197,94,0.3)] hover:shadow-[0_0_25px_-5px_rgba(34,197,94,0.5)]"
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: delay }}

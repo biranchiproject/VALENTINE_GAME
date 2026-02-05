@@ -33,4 +33,17 @@ export const insertRoomSchema = createInsertSchema(rooms).pick({
 });
 
 export type Room = typeof rooms.$inferSelect;
-export type InsertRoom = typeof rooms.$inferInsert;
+
+export const gameHistory = sqliteTable("game_history", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  roomCode: text("room_code").notNull(),
+  dayId: text("day_id").notNull(),
+  player1Name: text("player1_name").notNull(),
+  player2Name: text("player2_name").notNull(),
+  lovePercentage: integer("love_percentage").notNull(),
+  playedAt: integer("played_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export type GameHistory = typeof gameHistory.$inferSelect;
+export type InsertGameHistory = typeof gameHistory.$inferInsert;
+

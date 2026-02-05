@@ -177,6 +177,24 @@
   animation: pulse-glow 2s infinite;
 }
 
+@keyframes border-pulse-slow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px #ff007f, inset 0 0 5px #ff007f;
+    border-color: #ff007f;
+  }
+
+  50% {
+    box-shadow: 0 0 20px #ff007f, inset 0 0 10px #ff007f;
+    border-color: #ff99cc;
+  }
+}
+
+.animate-neon-border-slow {
+  animation: border-pulse-slow 3s ease-in-out infinite;
+}
+
 /* Text Shimmer Animation */
 .text-shimmer {
   background: linear-gradient(to right, #ffffff 20%, #ff99cc 40%, #ff99cc 60%, #ffffff 80%);

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
-import { useRoomState, useSession } from "@/hooks/use-game";
+import { useRoomState, useSession, useSaveHistory } from "@/hooks/use-game";
 import { QUESTIONS } from "@/data/questions";
 import { NeonCard } from "@/components/NeonCard";
+import { NeonHeartDisplay } from "@/components/NeonHeartDisplay";
 import { CyberButton } from "@/components/CyberButton";
 import { Loader2, Heart, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -15,9 +16,11 @@ export default function DayResult() {
 
     // State
     const [score, setScore] = useState(0);
+    const [hasSaved, setHasSaved] = useState(false);
 
     // Data
     const { data: room, isLoading } = useRoomState(roomCode as string);
+    const { mutate: saveHistory } = useSaveHistory();
 
     useEffect(() => {
         ensureSession();
@@ -25,10 +28,10 @@ export default function DayResult() {
     }, [ensureSession, roomCode, setLocation]);
 
     useEffect(() => {
-        if (room?.gameData) {
+        if (room?.gameData && !hasSaved) {
             calculateScore();
         }
-    }, [room, userName]); // Added userName to dependencies as it's used in calculateScore
+    }, [room, userName, hasSaved]);
 
     const calculateScore = () => {
         if (!room || !room.gameData) return;
@@ -39,11 +42,6 @@ export default function DayResult() {
         if (!p1 || !p2) return;
 
         // Calculate based on reviews
-        // If I reviewed partner's answer as CORRECT, and Partner reviewed my answer as CORRECT => Match
-        // Or simpler: Compare original answers again?
-        // The previous logic in ReviewPartner just saved true/false reviews.
-        // Let's assume Score = (My Correct Reviews + Partner's Correct Reviews) / Total Reviews
-
         const myReviews = room.gameData.reviews?.[userName || ""] || {};
         const partnerReviews = room.gameData.reviews?.[userName === p1 ? p2 : p1] || {};
 
@@ -52,15 +50,29 @@ export default function DayResult() {
         const questions = QUESTIONS[currentDay] || QUESTIONS["rose_day"];
         const totalQuestions = questions.length;
 
+        // Assuming reviews are boolean true/false for "Correctness" or "Agreement"
         Object.values(myReviews).forEach(r => { if (r) totalPoints += 5; });
         Object.values(partnerReviews).forEach(r => { if (r) totalPoints += 5; });
 
         // Normalize to 100%
         // Max points = Total Qs * 2 users * 5 points
         const maxPoints = totalQuestions * 2 * 5;
-        const percentage = Math.round((totalPoints / maxPoints) * 100);
+        const percentage = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 0;
 
         setScore(percentage);
+
+        // Save to History (Only once)
+        if (!hasSaved && percentage >= 0) {
+            console.log("Saving Game History...");
+            saveHistory({
+                roomCode: roomCode,
+                dayId: currentDay,
+                player1Name: p1,
+                player2Name: p2,
+                finalPercentage: percentage
+            });
+            setHasSaved(true);
+        }
     };
 
     if (isLoading || !room) return <div className="h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
@@ -131,48 +143,20 @@ export default function DayResult() {
                     <div className="flex justify-between items-center mb-8 px-4">
                         <div className="text-center">
                             <h3 className="font-cyber text-secondary text-lg mb-1">{p1}</h3>
-                            <div className="text-xs text-white/50 uppercase tracking-widest">Player 1</div>
+                            <div className="text-xs text-pink-400/70 uppercase tracking-widest">Player 1</div>
                         </div>
 
                         <div className="text-center">
                             <h3 className="font-cyber text-secondary text-lg mb-1">{p2}</h3>
-                            <div className="text-xs text-white/50 uppercase tracking-widest">Player 2</div>
+                            <div className="text-xs text-pink-400/70 uppercase tracking-widest">Player 2</div>
                         </div>
                     </div>
 
                     {/* Heart Progress */}
-                    <div className="relative w-48 h-48 mx-auto mb-8">
-                        <Heart className="w-full h-full text-white/10 absolute inset-0" strokeWidth={1} />
-
-                        {/* Filling Heart */}
-                        <div className="absolute inset-0 overflow-hidden flex items-end justify-center" style={{ clipPath: "url(#heart-clip)" }}>
-                            <motion.div
-                                className="w-full bg-gradient-to-t from-pink-600 to-pink-400 absolute bottom-0"
-                                initial={{ height: "0%" }}
-                                animate={{ height: `${percentage}%` }}
-                                transition={{ duration: 1.5, ease: "easeOut" }}
-                            />
-                        </div>
-
-                        {/* SVG Clip Path definition (invisible but used above) */}
-                        <svg width="0" height="0">
-                            <defs>
-                                <clipPath id="heart-clip" clipPathUnits="objectBoundingBox">
-                                    <path d="M0.5,0.155 C0.65,-0.1 1,-0.1 1,0.35 C1,0.7 0.5,1 0.5,1 C0.5,1 0,0.7 0,0.35 C0,-0.1 0.35,-0.1 0.5,0.155" />
-                                </clipPath>
-                            </defs>
-                        </svg>
-
-                        {/* Percentage Text on top */}
-                        <div className="absolute inset-0 flex items-center justify-center pt-4">
-                            <span className="text-5xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-mono">
-                                {percentage}%
-                            </span>
-                        </div>
-                    </div>
+                    <NeonHeartDisplay percentage={percentage} />
 
                     <div className="bg-white/5 p-4 rounded-xl border border-white/10 mb-8 backdrop-blur-sm">
-                        <p className="text-white/80 font-hand text-xl">
+                        <p className="text-pink-200 font-hand text-xl">
                             {percentage === 100 ? "Perfect Match! 💑" :
                                 percentage >= 80 ? "Deeply in Love! 💖" :
                                     percentage >= 50 ? "Growing Stronger! 🌱" : "Sparking New Love! ✨"}
@@ -180,10 +164,15 @@ export default function DayResult() {
                     </div>
 
                     <div className="space-y-3">
-                        <CyberButton className="w-full bg-pink-600 hover:bg-pink-700 border-pink-400">
-                            Share Love <Share2 className="ml-2 w-4 h-4" />
+
+                        <CyberButton
+                            variant="outline"
+                            className="w-full mt-3 animate-neon-border-slow text-pink-500 neon-text border-pink-500 hover:text-pink-300 hover:border-pink-300"
+                            onClick={() => setLocation("/catalog")}
+                        >
+                            Back to Home
                         </CyberButton>
-                        <p className="text-xs text-white/40">Next Chapter Unlocks Tomorrow...</p>
+                        <p className="text-xs text-pink-500/50">Next Chapter Unlocks Tomorrow...</p>
                     </div>
 
                 </motion.div>

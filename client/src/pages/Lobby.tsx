@@ -182,7 +182,7 @@ export default function Lobby() {
 
         </NeonCard>
 
-        <CyberButton variant="outline" onClick={() => setLocation('/')} className="text-xs py-2 px-4 opacity-50 hover:opacity-100">
+        <CyberButton variant="outline" onClick={() => setLocation('/catalog')} className="text-xs py-2 px-4 opacity-50 hover:opacity-100">
           <LogOut className="w-4 h-4 mr-2" /> Cancel
         </CyberButton>
       </div>

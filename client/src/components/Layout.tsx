@@ -13,11 +13,7 @@ export const Layout = ({ children }: LayoutProps) => {
                 {children}
             </main>
 
-            <footer className="w-full py-6 mt-auto text-center z-10">
-                <p className="text-sm font-architects text-white/30">
-                    © Biranchi Creativity • All Rights Reserved
-                </p>
-            </footer>
+            {/* Footer removed as per request */}
         </div>
     );
 };

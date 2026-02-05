@@ -15,6 +15,7 @@ import Lobby from "@/pages/Lobby";
 import GameScreen from "@/pages/GameScreen";
 import ReviewPartner from "@/pages/ReviewPartner";
 import DayResult from "@/pages/DayResult";
+import History from "@/pages/History"; // Import History
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/game/:code" component={GameScreen} />
       <Route path="/review-partner/:code" component={ReviewPartner} />
       <Route path="/day-result/:code" component={DayResult} />
+      <Route path="/history" component={History} /> {/* Add History Route */}
       <Route component={NotFound} />
     </Switch>
   );

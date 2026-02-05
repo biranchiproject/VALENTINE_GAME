@@ -2,6 +2,7 @@ import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { insertRoomSchema } from "../shared/schema";
+import { isDayUnlocked } from "../shared/valentineConfig";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -22,6 +23,14 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Player name is required" });
       }
 
+      // Day Validation
+      const selectedDay = day || "rose_day";
+      if (!isDayUnlocked(selectedDay)) {
+        // Allow if it is development or maybe just fail
+        // For now, strict fail
+        return res.status(403).json({ message: "This day is not yet unlocked! 💖" });
+      }
+
       // Generate 6-digit code
       const roomCode = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -31,10 +40,10 @@ export async function registerRoutes(
           roomCode,
           player1: playerName.trim(),
           status: "waiting",
-          day: day || "rose_day"
+          day: selectedDay
         });
 
-        console.log(`[CREATE] Room created: ${roomCode} by ${playerName}`);
+        console.log(`[CREATE] Room created: ${roomCode} by ${playerName} for ${selectedDay}`);
         res.status(201).json({ roomCode, success: true });
       } catch (storageError) {
         console.error("[CREATE] Storage Error:", storageError);
@@ -144,6 +153,11 @@ export async function registerRoutes(
         });
       }
 
+      // Check if day is unlocked (Double check, though create should have handled it)
+      if (!isDayUnlocked(room.day)) {
+        return res.status(403).json({ message: "This day is locked! 💖" });
+      }
+
       if (room.player2 && room.player2 !== playerName) {
         return res.status(409).json({ message: "Room full" });
       }
@@ -158,6 +172,56 @@ export async function registerRoutes(
     } catch (e) {
       console.error(e);
       res.status(500).send("Server Error");
+    }
+  });
+
+  // POST /api/history
+  app.post("/api/history", async (req, res) => {
+    try {
+      const { roomCode, dayId, player1Name, player2Name, finalPercentage } = req.body;
+
+      if (!roomCode || !dayId || !player1Name || !player2Name) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      console.log(`[HISTORY] Saving for Room: ${roomCode}, Day: ${dayId}, Users: ${player1Name} & ${player2Name}`);
+
+      const history = await storage.createGameHistory({
+        roomCode,
+        dayId,
+        player1Name,
+        player2Name,
+        lovePercentage: finalPercentage || 0
+      });
+
+      res.status(201).json({ success: true, history });
+    } catch (e) {
+      console.error("[HISTORY] Save Error:", e);
+      res.status(500).json({ message: "Failed to save history" });
+    }
+  });
+
+  // GET /api/history/:username
+  app.get("/api/history/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      const history = await storage.getGameHistory(username);
+      res.json(history);
+    } catch (e) {
+      console.error("[HISTORY] Fetch Error:", e);
+      res.status(500).json({ message: "Failed to fetch history" });
+    }
+  });
+
+  // GET /api/history/check/:username/:dayId
+  app.get("/api/history/check/:username/:dayId", async (req, res) => {
+    try {
+      const { username, dayId } = req.params;
+      const played = await storage.hasUserPlayedDay(username, dayId);
+      res.json({ played });
+    } catch (e) {
+      console.error("[HISTORY] Check Error:", e);
+      res.status(500).json({ message: "Failed to check history" });
     }
   });
 

@@ -71,6 +71,41 @@ export function useSubmitReview() {
   });
 }
 
+export function useSaveHistory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: any) => {
+      return await api.saveHistory(data);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['history', variables.player1Name] });
+      queryClient.invalidateQueries({ queryKey: ['history', variables.player2Name] });
+    }
+  });
+}
+
+export function useUserHistory(username: string) {
+  return useQuery({
+    queryKey: ['history', username],
+    queryFn: async () => {
+      if (!username) return [];
+      return await api.getHistory(username);
+    },
+    enabled: !!username
+  });
+}
+
+export function useCheckHistory(username: string, dayId: string) {
+  return useQuery({
+    queryKey: ['checkHistory', username, dayId],
+    queryFn: async () => {
+      if (!username || !dayId) return { played: false };
+      return await api.checkHistory(username, dayId);
+    },
+    enabled: !!username && !!dayId
+  });
+}
+
 export function useSession() {
   const userName = localStorage.getItem('userName');
   const roomCode = sessionStorage.getItem('roomCode');

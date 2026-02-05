@@ -12,12 +12,7 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const existingUser = localStorage.getItem('userName');
-    if (existingUser) {
-      setLocation('/catalog');
-    }
-  }, [setLocation]);
+
 
   const handleStart = () => {
     if (!name.trim()) return toast({ title: "Name required", description: "Please enter your name", variant: "destructive" });
@@ -52,8 +47,8 @@ export default function Home() {
           transition={{ duration: 0.8 }}
           className="text-center mb-12"
         >
-          <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-br from-primary via-white to-secondary neon-text font-cyber mb-4">
-            Make your<br />Valentine ❤️
+          <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-primary via-white to-secondary neon-text font-cyber mb-4">
+            Valentine ❤️
           </h1>
           <p className="text-xl text-primary/80 font-hand tracking-widest">Enjoy the game with your soul ❤️</p>
         </motion.div>
@@ -75,7 +70,7 @@ export default function Home() {
                 />
               </div>
               <CyberButton onClick={handleStart} className="w-full text-lg h-14">
-                ENJOY VALENTINE ❤️
+                ENJOY VALENTINE❤️
               </CyberButton>
             </div>
           </NeonCard>
