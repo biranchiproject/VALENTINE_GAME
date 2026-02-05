@@ -71,15 +71,51 @@ export function useSubmitReview() {
   });
 }
 
+import { storage as localStorageUtil } from "@/lib/storage";
+
 export function useSaveHistory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: any) => {
-      return await api.saveHistory(data);
+      // 1. Save to Local Storage (Primary for persistence across deploys)
+      // data typically has: roomCode, dayId, player1Name, player2Name, finalPercentage
+      // We need to map it to our GameHistoryItem structure
+      const historyItem = {
+        roomCode: data.roomCode,
+        dayId: data.dayId,
+        player1Name: data.player1Name,
+        player2Name: data.player2Name,
+        lovePercentage: data.finalPercentage || 0,
+        playedAt: new Date().toISOString()
+      };
+
+      localStorageUtil.addHistory(data.player1Name, historyItem);
+
+      // Also sync for partner if different (assuming they might be using same browser/device in this local-first context?? 
+      // Actually strictly, we only save for the current user usually, but here we have names. 
+      // The prompt says "Use a single storage key per user".
+      // We will only strictly add for player1Name as that's likely the "user" context invoking this,
+      // but if the hook is called, it might be safer to just ensure we save for the "user in session".
+      // ... Looking at usage in DayResult -> it passes player1Name and player2Name.
+      // We safely add for both just in case they switch profiles on same device.
+      if (data.player2Name && data.player2Name !== data.player1Name) {
+        localStorageUtil.addHistory(data.player2Name, historyItem);
+      }
+
+      // 2. Try API (Best effort, ignore failure)
+      try {
+        await api.saveHistory(data);
+      } catch (e) {
+        console.warn("API save failed, relying on local storage", e);
+      }
+
+      return historyItem;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['history', variables.player1Name] });
-      queryClient.invalidateQueries({ queryKey: ['history', variables.player2Name] });
+      if (variables.player2Name) {
+        queryClient.invalidateQueries({ queryKey: ['history', variables.player2Name] });
+      }
     }
   });
 }
@@ -89,7 +125,9 @@ export function useUserHistory(username: string) {
     queryKey: ['history', username],
     queryFn: async () => {
       if (!username) return [];
-      return await api.getHistory(username);
+      // Read from Local Storage
+      const data = localStorageUtil.getUserData(username);
+      return data.history.sort((a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime());
     },
     enabled: !!username
   });
@@ -100,9 +138,24 @@ export function useCheckHistory(username: string, dayId: string) {
     queryKey: ['checkHistory', username, dayId],
     queryFn: async () => {
       if (!username || !dayId) return { played: false };
-      return await api.checkHistory(username, dayId);
+      const data = localStorageUtil.getUserData(username);
+      const played = data.completedDays.includes(dayId);
+      return { played };
     },
     enabled: !!username && !!dayId
+  });
+}
+
+export function useDeleteHistory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (username: string) => {
+      localStorageUtil.clearUserData(username);
+    },
+    onSuccess: (_, username) => {
+      queryClient.invalidateQueries({ queryKey: ['history', username] });
+      queryClient.invalidateQueries({ queryKey: ['checkHistory'] });
+    }
   });
 }
 
