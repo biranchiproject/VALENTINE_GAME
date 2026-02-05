@@ -33,6 +33,7 @@ export const insertRoomSchema = createInsertSchema(rooms).pick({
 });
 
 export type Room = typeof rooms.$inferSelect;
+export type InsertRoom = typeof rooms.$inferInsert;
 
 export const gameHistory = sqliteTable("game_history", {
   id: integer("id").primaryKey({ autoIncrement: true }),
