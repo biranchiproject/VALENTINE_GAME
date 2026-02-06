@@ -60,7 +60,7 @@ export const ProfileMenu = ({ userName, onLogout }: ProfileMenuProps) => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 mt-2 w-56 bg-black/90 border border-primary/30 rounded-xl shadow-[0_0_30px_rgba(255,0,127,0.15)] overflow-hidden z-50 backdrop-blur-md"
+                        className="absolute left-0 mt-2 w-56 bg-black/90 border border-primary/30 rounded-xl shadow-[0_0_30px_rgba(255,0,127,0.15)] overflow-hidden z-50 backdrop-blur-md"
                     >
                         <div className="p-4 border-b border-white/10 flex flex-col items-center gap-2">
                             <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary flex items-center justify-center">
