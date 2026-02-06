@@ -16,6 +16,7 @@ export function useLeaderboard(dayId: string) {
     return useQuery<LeaderboardEntry[]>({
         queryKey: isOverall ? ["/api/leaderboard/overall"] : [`/api/leaderboard/${dayId}`],
         enabled: !!dayId,
+        refetchInterval: 5000,
     });
 }
 

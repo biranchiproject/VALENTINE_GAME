@@ -3,6 +3,13 @@ import { Trophy, Clock, Heart, Crown } from "lucide-react";
 import { useLeaderboard } from "@/hooks/use-leaderboard";
 import { NeonCard } from "@/components/NeonCard";
 import { VALENTINE_DAYS } from "@shared/valentineConfig";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface LeaderboardProps {
     initialDay?: string;
@@ -14,7 +21,7 @@ export const Leaderboard = ({ initialDay = "rose_day", displayMode = "specific" 
     const queryKey = displayMode === "overall" ? "overall" : initialDay;
     const { data: leaderboard = [], isLoading } = useLeaderboard(queryKey);
 
-    const title = displayMode === "overall" ? "OVERALL CHAMPIONS" : `${VALENTINE_DAYS.find(d => d.id === initialDay)?.title} LEADERS`;
+    const title = displayMode === "overall" ? "World Best Couples ❤️❤️" : `${VALENTINE_DAYS.find(d => d.id === initialDay)?.title} LEADERS`;
 
     return (
         <NeonCard className="w-full max-w-4xl p-6 relative overflow-hidden flex flex-col gap-6 mb-8">
@@ -28,7 +35,7 @@ export const Leaderboard = ({ initialDay = "rose_day", displayMode = "specific" 
                 </h2>
                 {displayMode === "overall" && (
                     <p className="text-muted-foreground text-xs md:text-sm font-mono tracking-widest uppercase">
-                        Combined scores across all days
+                        VALENTINE DAYS WINNER
                     </p>
                 )}
             </div>

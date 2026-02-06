@@ -19,6 +19,26 @@ sqlite.exec(`
     cancelled_by TEXT,
     language TEXT DEFAULT 'en'
   );
+
+  CREATE TABLE IF NOT EXISTS game_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_code TEXT NOT NULL,
+    day_id TEXT NOT NULL,
+    player1_name TEXT NOT NULL,
+    player2_name TEXT NOT NULL,
+    love_percentage INTEGER NOT NULL,
+    played_at INTEGER
+  );
+
+  CREATE TABLE IF NOT EXISTS leaderboard (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    day_id TEXT NOT NULL,
+    player1_name TEXT NOT NULL,
+    player2_name TEXT NOT NULL,
+    love_percentage INTEGER NOT NULL,
+    completion_time INTEGER NOT NULL,
+    created_at INTEGER
+  );
 `);
 
 export { db };
