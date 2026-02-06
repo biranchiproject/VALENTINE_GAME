@@ -8,11 +8,16 @@ import { Loader2, Check, X, Heart, Trophy, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
+import { useLanguage } from "@/hooks/use-language";
+
 export default function ReviewPartner() {
     const [match, params] = useRoute("/review-partner/:code");
     const roomCode = params?.code;
     const { userName, ensureSession } = useSession();
     const [, setLocation] = useLocation();
+
+    // Language
+    const { language } = useLanguage();
 
     // Data
     const { data: room, isLoading } = useRoomState(roomCode as string);
@@ -59,6 +64,10 @@ export default function ReviewPartner() {
         // Fallback or loading state if question is missing but not submitted
         return <div className="text-white text-center p-10">Loading questions...</div>;
     }
+
+    // Localized Text
+    const questionText = currentQ.q[language];
+    const optionsList = currentQ.options[language];
 
     const handleReview = (isCorrect: boolean) => {
         setReviews(prev => ({ ...prev, [currentQ.id]: isCorrect }));
@@ -157,7 +166,7 @@ export default function ReviewPartner() {
                     >
                         <NeonCard className="p-6 md:p-10">
                             <h2 className="text-xl md:text-2xl font-hand text-white text-center mb-8">
-                                {currentQ.q}
+                                {questionText}
                             </h2>
 
                             <div className="bg-white/5 p-6 rounded-xl border border-white/10 mb-8 text-center">
@@ -170,7 +179,7 @@ export default function ReviewPartner() {
 
                                 {/* Show all options */}
                                 <div className="grid grid-cols-1 gap-2 text-left">
-                                    {currentQ.options.map((opt) => {
+                                    {optionsList.map((opt) => {
                                         const isSelected = partnerAnswers[currentQ.id] === opt;
                                         return (
                                             <div

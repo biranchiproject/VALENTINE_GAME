@@ -23,6 +23,8 @@ export const rooms = sqliteTable("rooms", {
     submissionStatus: {},
     bothSubmitted: false
   }),
+  cancelledBy: text("cancelled_by"),
+  language: text("language").notNull().default("en"),
 });
 
 export const insertRoomSchema = createInsertSchema(rooms).pick({

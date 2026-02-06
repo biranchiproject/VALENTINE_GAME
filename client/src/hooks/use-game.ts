@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { storage as localStorageUtil } from "@/lib/storage";
 
 // --- Types ---
 export interface RoomState {
@@ -12,8 +13,8 @@ export interface RoomState {
 
 export function useCreateRoom() {
   return useMutation({
-    mutationFn: async ({ playerName, day }: { playerName: string, day: string }) => {
-      const data = await api.createRoom(playerName, day);
+    mutationFn: async ({ playerName, day, language }: { playerName: string, day: string, language: string }) => {
+      const data = await api.createRoom(playerName, day, language);
       return data.roomCode;
     },
     onSuccess: (code) => {
@@ -71,7 +72,17 @@ export function useSubmitReview() {
   });
 }
 
-import { storage as localStorageUtil } from "@/lib/storage";
+export function useCancelRoom() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ roomCode, playerName }: { roomCode: string, playerName: string }) => {
+      await api.cancelRoom(roomCode, playerName);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['room', variables.roomCode] });
+    }
+  });
+}
 
 export function useSaveHistory() {
   const queryClient = useQueryClient();

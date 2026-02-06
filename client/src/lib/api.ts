@@ -1,10 +1,10 @@
 export const api = {
-    async createRoom(playerName: string, day: string) {
+    async createRoom(playerName: string, day: string, language: string) {
         const BASE_URL = import.meta.env.VITE_API_URL || "";
         const res = await fetch(`${BASE_URL}/api/room/create`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ playerName, day }),
+            body: JSON.stringify({ playerName, day, language }),
         });
         if (!res.ok) throw new Error(await res.text());
         return res.json();
@@ -45,6 +45,17 @@ export const api = {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ roomCode, playerName, reviews }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+    },
+
+    async cancelRoom(roomCode: string, playerName: string) {
+        const BASE_URL = import.meta.env.VITE_API_URL || "";
+        const res = await fetch(`${BASE_URL}/api/room/cancel`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ roomCode, playerName }),
         });
         if (!res.ok) throw new Error(await res.text());
         return res.json();

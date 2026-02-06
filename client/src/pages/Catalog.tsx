@@ -1,17 +1,19 @@
 import { useLocation } from "wouter";
 import { NeonCard } from "@/components/NeonCard";
 import { motion } from "framer-motion";
-import { Heart, Lock, CheckCircle } from "lucide-react";
+import { Heart, Lock, CheckCircle, Globe } from "lucide-react";
 import { useSession, useUserHistory } from "@/hooks/use-game";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { VALENTINE_DAYS, isDayUnlocked } from "@shared/valentineConfig";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage, LANGUAGES } from "@/hooks/use-language";
 
 export default function Catalog() {
     const [, setLocation] = useLocation();
     const { userName, logout } = useSession();
     const { toast } = useToast();
     const { data: history = [] } = useUserHistory(userName || "");
+    const { language, setLanguage } = useLanguage();
 
     const handleSelectDay = (dayId: string) => {
         if (!isDayUnlocked(dayId)) {
@@ -44,11 +46,32 @@ export default function Catalog() {
         <div className="w-full flex-grow flex flex-col items-center pt-8 pb-12 px-4 relative">
 
             {/* Top Bar with Profile Menu */}
-            <div className="w-full max-w-6xl flex justify-between items-center mb-8 px-2">
-                <div className="font-cyber text-2xl md:text-3xl text-primary neon-text tracking-widest">
+            <div className="w-full max-w-6xl flex flex-row justify-between items-center mb-8 px-4 relative z-50">
+                {/* Profile Menu - Left Side */}
+                <ProfileMenu userName={userName || ""} onLogout={logout} />
+
+                {/* Title - Center */}
+                <div className="font-cyber text-lg sm:text-2xl md:text-3xl text-primary neon-text tracking-widest text-center flex-grow mx-4">
                     LOVE BOND <span className="text-white">💘</span>
                 </div>
-                <ProfileMenu userName={userName || ""} onLogout={logout} />
+
+                {/* Language Selector - Right Side */}
+                <div className="flex items-center gap-2 sm:gap-4">
+                    <div className="flex items-center bg-black/40 rounded-full border border-white/10 p-1">
+                        {LANGUAGES.map((lang) => (
+                            <button
+                                key={lang.id}
+                                onClick={() => setLanguage(lang.id)}
+                                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${language === lang.id
+                                    ? "bg-primary text-white shadow-[0_0_10px_rgba(236,72,153,0.5)]"
+                                    : "text-white/50 hover:text-white hover:bg-white/5"
+                                    }`}
+                            >
+                                {lang.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* Header */}

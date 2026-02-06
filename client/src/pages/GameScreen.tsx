@@ -8,11 +8,16 @@ import { Loader2, ArrowLeft, Check, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+import { useLanguage } from "@/hooks/use-language";
+
 export default function GameScreen() {
     const [match, params] = useRoute("/game/:code");
     const roomCode = params?.code;
     const { userName, ensureSession } = useSession();
     const [, setLocation] = useLocation();
+
+    // Language
+    const { language } = useLanguage();
 
     // Game State
     const [qIndex, setQIndex] = useState(0);
@@ -92,6 +97,10 @@ export default function GameScreen() {
 
     if (!currentQ) return <div className="p-10 text-white">Loading Questions...</div>;
 
+    // Get localized text
+    const questionText = currentQ.q[language];
+    const optionsList = currentQ.options[language];
+
     return (
         <div className="w-full flex-grow flex flex-col items-center justify-center relative p-4 max-w-2xl mx-auto">
 
@@ -111,11 +120,11 @@ export default function GameScreen() {
                 >
                     <NeonCard className="min-h-[400px] flex flex-col justify-center p-6 md:p-10">
                         <h2 className="text-2xl md:text-3xl font-hand text-white text-center mb-10 leading-relaxed">
-                            {currentQ.q}
+                            {questionText}
                         </h2>
 
                         <div className="grid grid-cols-1 gap-4">
-                            {currentQ.options.map((opt) => {
+                            {optionsList.map((opt) => {
                                 const isSelected = answers[currentQ.id] === opt;
                                 return (
                                     <button

@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 export interface IStorage {
   createRoom(room: InsertRoom): Promise<Room>;
   getRoomByCode(code: string): Promise<Room | undefined>;
-  updateRoom(roomCode: string, gameData: any, player2?: string, status?: string): Promise<Room>;
+  updateRoom(roomCode: string, gameData: any, player2?: string, status?: string, cancelledBy?: string): Promise<Room>;
   createGameHistory(history: InsertGameHistory): Promise<GameHistory>;
   getGameHistory(userName: string): Promise<GameHistory[]>;
   hasUserPlayedDay(userName: string, dayId: string): Promise<boolean>;
@@ -22,10 +22,11 @@ export class SqliteStorage implements IStorage {
     return room;
   }
 
-  async updateRoom(roomCode: string, gameData: any, player2?: string, status?: string): Promise<Room> {
+  async updateRoom(roomCode: string, gameData: any, player2?: string, status?: string, cancelledBy?: string): Promise<Room> {
     const updateData: any = { gameData };
     if (player2) updateData.player2 = player2;
     if (status) updateData.status = status;
+    if (cancelledBy !== undefined) updateData.cancelledBy = cancelledBy;
 
     const [updatedRoom] = await db
       .update(rooms)

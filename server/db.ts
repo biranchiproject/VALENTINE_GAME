@@ -15,7 +15,9 @@ sqlite.exec(`
     status TEXT DEFAULT 'waiting',
     day TEXT DEFAULT 'rose_day',
     created_at INTEGER,
-    game_data TEXT DEFAULT '{}'
+    game_data TEXT DEFAULT '{}',
+    cancelled_by TEXT,
+    language TEXT DEFAULT 'en'
   );
 `);
 

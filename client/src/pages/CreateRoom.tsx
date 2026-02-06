@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useCreateRoom, useSession } from "@/hooks/use-game";
+import { useLanguage } from "@/hooks/use-language";
 import { NeonCard } from "@/components/NeonCard";
 import { Loader2, AlertCircle, RefreshCcw } from "lucide-react";
 import { CyberButton } from "@/components/CyberButton";
@@ -20,10 +21,12 @@ export default function CreateRoom() {
         ensureSession();
     }, [ensureSession]);
 
+    const { language } = useLanguage();
+
     // Trigger creation immediately once we have the username
     useEffect(() => {
         if (userName && !isPending && !isError) {
-            createRoom({ playerName: userName, day: selectedDay }, {
+            createRoom({ playerName: userName, day: selectedDay, language }, {
                 onSuccess: (code) => {
                     setLocation(`/lobby/${code}`);
                 }

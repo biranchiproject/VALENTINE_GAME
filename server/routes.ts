@@ -17,7 +17,7 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Invalid request body" });
       }
 
-      const { playerName, day } = req.body;
+      const { playerName, day, language } = req.body;
 
       if (!playerName || typeof playerName !== 'string' || !playerName.trim()) {
         return res.status(400).json({ message: "Player name is required" });
@@ -25,6 +25,8 @@ export async function registerRoutes(
 
       // Day Validation
       const selectedDay = day || "rose_day";
+      const selectedLanguage = language || "en";
+
       if (!isDayUnlocked(selectedDay)) {
         // Allow if it is development or maybe just fail
         // For now, strict fail
@@ -40,7 +42,8 @@ export async function registerRoutes(
           roomCode,
           player1: playerName.trim(),
           status: "waiting",
-          day: selectedDay
+          day: selectedDay,
+          language: selectedLanguage
         });
 
         console.log(`[CREATE] Room created: ${roomCode} by ${playerName} for ${selectedDay}`);
@@ -225,6 +228,28 @@ export async function registerRoutes(
     }
   });
 
+  // POST /api/room/cancel
+  app.post("/api/room/cancel", async (req, res) => {
+    try {
+      const { roomCode, playerName } = req.body;
+      const room = await storage.getRoomByCode(roomCode);
+
+      if (!room) return res.status(404).json({ message: "Room not found" });
+
+      if (room.player1 !== playerName && room.player2 !== playerName) {
+        return res.status(403).json({ message: "You are not in this room" });
+      }
+
+      await storage.updateRoom(roomCode, room.gameData, undefined, "cancelled", playerName);
+      console.log(`[CANCEL] Room ${roomCode} cancelled by ${playerName}`);
+
+      res.json({ success: true });
+    } catch (e) {
+      console.error(e);
+      res.status(500).send("Server Error");
+    }
+  });
+
   // GET /api/room/:roomCode
   app.get("/api/room/:roomCode", async (req, res) => {
     try {
@@ -238,7 +263,9 @@ export async function registerRoutes(
         player2: room.player2,
         status: room.status,
         day: room.day,
-        gameData: room.gameData
+        language: room.language,
+        gameData: room.gameData,
+        cancelledBy: (room as any).cancelledBy
       });
     } catch (e) {
       console.error(e);

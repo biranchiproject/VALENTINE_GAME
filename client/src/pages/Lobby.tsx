@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useRoute } from "wouter";
-import { useRoomState, useSession } from "@/hooks/use-game";
+import { useRoomState, useSession, useCancelRoom } from "@/hooks/use-game";
+import { useLanguage } from "@/hooks/use-language";
 import { NeonCard } from "@/components/NeonCard";
 import { CyberButton } from "@/components/CyberButton";
 import { Loader2, Heart, Copy, LogOut } from "lucide-react";
@@ -13,12 +14,14 @@ export default function Lobby() {
   const roomCode = params?.code || null;
 
   const { userName, ensureSession } = useSession();
+  const { setLanguage } = useLanguage();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [countdown, setCountdown] = useState<number | null>(null);
 
   // Poll room state
   const { data: room, isLoading, error } = useRoomState(roomCode);
+  const cancelRoom = useCancelRoom();
 
   useEffect(() => {
     ensureSession();
@@ -32,7 +35,30 @@ export default function Lobby() {
         setCountdown(3);
       }
     }
-  }, [room, countdown]);
+
+    // Force sync language
+    if (room && room.language) {
+      const roomLang = room.language as 'en' | 'hi';
+      // We check against localStorage to avoid infinite loops, but setLanguage handles state
+      setLanguage(roomLang);
+    }
+  }, [room, countdown, setLanguage]);
+
+  // Handle Room Cancellation / Auto-Exit
+  useEffect(() => {
+    if (room && room.status === 'cancelled') {
+      const cancelledBy = (room as any).cancelledBy;
+      if (cancelledBy && cancelledBy !== userName) {
+        toast({
+          title: "Room Cancelled 💔",
+          description: "Your partner left the room.",
+          variant: "destructive"
+        });
+      }
+      // Whether I cancelled it or partner did, redirect to catalog
+      setLocation('/catalog');
+    }
+  }, [room, userName, setLocation, toast]);
 
   // Countdown Timer
   useEffect(() => {
@@ -49,6 +75,18 @@ export default function Lobby() {
   const copyCode = () => {
     navigator.clipboard.writeText(roomCode || "");
     toast({ title: "Copied!", description: "Share this code with your partner." });
+  };
+
+  const handleCancel = async () => {
+    if (!roomCode || !userName) return;
+    try {
+      await cancelRoom.mutateAsync({ roomCode, playerName: userName });
+      // The useEffect will handle the redirection
+    } catch (e) {
+      console.error("Failed to cancel room", e);
+      // Force redirect just in case
+      setLocation('/catalog');
+    }
   };
 
   if (isLoading) {
@@ -182,7 +220,7 @@ export default function Lobby() {
 
         </NeonCard>
 
-        <CyberButton variant="outline" onClick={() => setLocation('/catalog')} className="text-xs py-2 px-4 opacity-50 hover:opacity-100">
+        <CyberButton variant="outline" onClick={handleCancel} className="text-xs py-2 px-4 opacity-50 hover:opacity-100">
           <LogOut className="w-4 h-4 mr-2" /> Cancel
         </CyberButton>
       </div>
