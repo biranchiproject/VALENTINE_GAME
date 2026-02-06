@@ -50,3 +50,15 @@ export const gameHistory = sqliteTable("game_history", {
 export type GameHistory = typeof gameHistory.$inferSelect;
 export type InsertGameHistory = typeof gameHistory.$inferInsert;
 
+export const leaderboard = sqliteTable("leaderboard", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  dayId: text("day_id").notNull(),
+  player1Name: text("player1_name").notNull(),
+  player2Name: text("player2_name").notNull(),
+  lovePercentage: integer("love_percentage").notNull(),
+  completionTime: integer("completion_time").notNull(), // in seconds
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export type LeaderboardEntry = typeof leaderboard.$inferSelect;
+export type InsertLeaderboardEntry = typeof leaderboard.$inferInsert;

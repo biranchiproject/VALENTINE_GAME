@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useRoomState, useSession, useSaveHistory } from "@/hooks/use-game";
+import { useSubmitScore } from "@/hooks/use-leaderboard";
 import { QUESTIONS } from "@/data/questions";
 import { NeonCard } from "@/components/NeonCard";
 import { NeonHeartDisplay } from "@/components/NeonHeartDisplay";
+import { Leaderboard } from "@/components/Leaderboard";
 import { CyberButton } from "@/components/CyberButton";
 import { Loader2, Heart, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -21,6 +23,7 @@ export default function DayResult() {
     // Data
     const { data: room, isLoading } = useRoomState(roomCode as string);
     const { mutate: saveHistory } = useSaveHistory();
+    const { mutate: submitScore } = useSubmitScore();
 
     useEffect(() => {
         ensureSession();
@@ -61,9 +64,11 @@ export default function DayResult() {
 
         setScore(percentage);
 
-        // Save to History (Only once)
+        // Save to History & Leaderboard (Only once)
         if (!hasSaved && percentage >= 0) {
-            console.log("Saving Game History...");
+            console.log("Saving Game History & Leaderboard...");
+
+            // 1. Save History
             saveHistory({
                 roomCode: roomCode,
                 dayId: currentDay,
@@ -71,6 +76,20 @@ export default function DayResult() {
                 player2Name: p2,
                 finalPercentage: percentage
             });
+
+            // 2. Save Leaderboard Entry
+            // TODO: Calculate actual completion time. For now using mock/random or existing timestamp diff if available.
+            // In a real app, track startTime in room creation and compare with now.
+            const completionTime = Math.floor(Math.random() * 300) + 60; // Mock: 60-360 seconds
+
+            submitScore({
+                dayId: currentDay,
+                player1Name: p1,
+                player2Name: p2,
+                lovePercentage: percentage,
+                completionTime: completionTime
+            });
+
             setHasSaved(true);
         }
     };
@@ -177,6 +196,11 @@ export default function DayResult() {
 
                 </motion.div>
             </NeonCard>
+
+            {/* Leaderboard Section */}
+            <div className="w-full max-w-4xl mt-8">
+                <Leaderboard initialDay={currentDay} displayMode="specific" />
+            </div>
         </div>
     );
 }

@@ -1,6 +1,6 @@
-import { rooms, gameHistory, type Room, type InsertRoom, type GameHistory, type InsertGameHistory } from "../shared/schema";
+import { rooms, gameHistory, leaderboard, type Room, type InsertRoom, type GameHistory, type InsertGameHistory, type LeaderboardEntry, type InsertLeaderboardEntry } from "../shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc, asc } from "drizzle-orm";
 
 export interface IStorage {
   createRoom(room: InsertRoom): Promise<Room>;
@@ -9,6 +9,9 @@ export interface IStorage {
   createGameHistory(history: InsertGameHistory): Promise<GameHistory>;
   getGameHistory(userName: string): Promise<GameHistory[]>;
   hasUserPlayedDay(userName: string, dayId: string): Promise<boolean>;
+  createLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry>;
+  getLeaderboard(dayId: string): Promise<LeaderboardEntry[]>;
+  getOverallLeaderboard(): Promise<LeaderboardEntry[]>;
 }
 
 export class SqliteStorage implements IStorage {
@@ -62,6 +65,59 @@ export class SqliteStorage implements IStorage {
   async hasUserPlayedDay(userName: string, dayId: string): Promise<boolean> {
     const history = await this.getGameHistory(userName);
     return history.some(h => h.dayId === dayId);
+  }
+
+  async createLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry> {
+    const [newEntry] = await db.insert(leaderboard).values(entry).returning();
+    return newEntry;
+  }
+
+  async getLeaderboard(dayId: string): Promise<LeaderboardEntry[]> {
+    return await db
+      .select()
+      .from(leaderboard)
+      .where(eq(leaderboard.dayId, dayId))
+      .orderBy(desc(leaderboard.lovePercentage), asc(leaderboard.completionTime), asc(leaderboard.createdAt));
+  }
+
+  async getOverallLeaderboard(): Promise<LeaderboardEntry[]> {
+    // Aggregate by player pair names.
+    // Note: This casts the result back to LeaderboardEntry structure roughly, 
+    // but calculated fields like lovePercentage will be averages.
+    // We use raw sql because simple group by is cleaner there for this logic.
+    const { sql } = await import("drizzle-orm");
+
+    // We group by player names (case insensitive roughly, or just exact for now)
+    // We'll take the MAX date as createdAt to keep types happy
+    // We'll average the lovePercentage
+    const result = await db.all(
+      sql`
+        SELECT 
+          MAX(id) as id, 
+          'overall' as day_id,
+          player1_name, 
+          player2_name, 
+          CAST(AVG(love_percentage) AS INTEGER) as love_percentage, 
+          CAST(SUM(completion_time) AS INTEGER) as completion_time,
+          MAX(created_at) as created_at
+        FROM leaderboard 
+        GROUP BY player1_name, player2_name 
+        ORDER BY love_percentage DESC, completion_time ASC
+      `
+    );
+
+    // Map result to match LeaderboardEntry type if needed, but db.all usually returns any.
+    // Drizzle's db.execute or similar might be safer typed, but for sqlite 'all' works well for raw.
+    // We need to cast the result rows to LeaderboardEntry manually or trust the shape matches.
+    return result.map((row: any) => ({
+      id: row.id,
+      dayId: 'overall',
+      player1Name: row.player1_name,
+      player2Name: row.player2_name,
+      lovePercentage: row.love_percentage,
+      completionTime: row.completion_time,
+      createdAt: new Date(row.created_at)
+    }));
   }
 }
 

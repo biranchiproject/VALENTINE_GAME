@@ -7,6 +7,7 @@ import { ProfileMenu } from "@/components/ProfileMenu";
 import { VALENTINE_DAYS, isDayUnlocked } from "@shared/valentineConfig";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage, LANGUAGES } from "@/hooks/use-language";
+import { Leaderboard } from "@/components/Leaderboard";
 
 export default function Catalog() {
     const [, setLocation] = useLocation();
@@ -153,6 +154,9 @@ export default function Catalog() {
                     );
                 })}
             </div>
+
+            {/* Leaderboard Section */}
+            <Leaderboard displayMode="overall" />
         </div>
     );
 }

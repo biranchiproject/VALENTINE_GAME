@@ -273,5 +273,54 @@ export async function registerRoutes(
     }
   });
 
+  // POST /api/leaderboard
+  app.post("/api/leaderboard", async (req, res) => {
+    try {
+      const { dayId, player1Name, player2Name, lovePercentage, completionTime } = req.body;
+
+      if (!dayId || !player1Name || !player2Name || lovePercentage === undefined || completionTime === undefined) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      console.log(`[LEADERBOARD] New Entry: ${dayId} - ${lovePercentage}% in ${completionTime}s`);
+
+      const entry = await storage.createLeaderboardEntry({
+        dayId,
+        player1Name,
+        player2Name,
+        lovePercentage,
+        completionTime
+      });
+
+      res.status(201).json({ success: true, entry });
+    } catch (e) {
+      console.error("[LEADERBOARD] Save Error:", e);
+      res.status(500).json({ message: "Failed to save leaderboard entry" });
+    }
+  });
+
+  // GET /api/leaderboard/overall
+  app.get("/api/leaderboard/overall", async (_req, res) => {
+    try {
+      const leaderboard = await storage.getOverallLeaderboard();
+      res.json(leaderboard);
+    } catch (e) {
+      console.error("[LEADERBOARD] Fetch Overall Error:", e);
+      res.status(500).json({ message: "Failed to fetch overall leaderboard" });
+    }
+  });
+
+  // GET /api/leaderboard/:dayId
+  app.get("/api/leaderboard/:dayId", async (req, res) => {
+    try {
+      const { dayId } = req.params;
+      const leaderboard = await storage.getLeaderboard(dayId);
+      res.json(leaderboard);
+    } catch (e) {
+      console.error("[LEADERBOARD] Fetch Error:", e);
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
   return httpServer;
 }
