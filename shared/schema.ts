@@ -1,18 +1,16 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// SQLite only schema
-export const rooms = sqliteTable("rooms", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const rooms = pgTable("rooms", {
+  id: serial("id").primaryKey(),
   roomCode: text("room_code").notNull().unique(),
   player1: text("player1").notNull(),
   player2: text("player2"),
   status: text("status").notNull().default("waiting"),
   day: text("day").notNull().default("rose_day"),
-  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
-  gameData: text("game_data", { mode: "json" }).$type<{
+  createdAt: timestamp("created_at").defaultNow(),
+  gameData: jsonb("game_data").$type<{
     answers: Record<string, Record<string, string>>;
     reviews: Record<string, Record<string, boolean>>;
     submissionStatus: Record<string, boolean>;
@@ -37,27 +35,27 @@ export const insertRoomSchema = createInsertSchema(rooms).pick({
 export type Room = typeof rooms.$inferSelect;
 export type InsertRoom = typeof rooms.$inferInsert;
 
-export const gameHistory = sqliteTable("game_history", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const gameHistory = pgTable("game_history", {
+  id: serial("id").primaryKey(),
   roomCode: text("room_code").notNull(),
   dayId: text("day_id").notNull(),
   player1Name: text("player1_name").notNull(),
   player2Name: text("player2_name").notNull(),
   lovePercentage: integer("love_percentage").notNull(),
-  playedAt: integer("played_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  playedAt: timestamp("played_at").defaultNow(),
 });
 
 export type GameHistory = typeof gameHistory.$inferSelect;
 export type InsertGameHistory = typeof gameHistory.$inferInsert;
 
-export const leaderboard = sqliteTable("leaderboard", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const leaderboard = pgTable("leaderboard", {
+  id: serial("id").primaryKey(),
   dayId: text("day_id").notNull(),
   player1Name: text("player1_name").notNull(),
   player2Name: text("player2_name").notNull(),
   lovePercentage: integer("love_percentage").notNull(),
   completionTime: integer("completion_time").notNull(), // in seconds
-  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export type LeaderboardEntry = typeof leaderboard.$inferSelect;

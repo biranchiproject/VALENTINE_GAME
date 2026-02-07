@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
 import { insertRoomSchema } from "../shared/schema";
 import { isDayUnlocked } from "../shared/valentineConfig";
 

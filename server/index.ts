@@ -1,7 +1,24 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { serveStatic } from "./static";
+import fs from "fs";
+import path from "path";
 import { createServer } from "http";
+
+// Load .env manually
+const envPath = path.resolve(process.cwd(), ".env");
+if (fs.existsSync(envPath)) {
+  const envConfig = fs.readFileSync(envPath, "utf8");
+  envConfig.split("\n").forEach((line) => {
+    if (line.trim().startsWith("#")) return;
+    const [key, ...valueParts] = line.split("=");
+    const value = valueParts.join("=");
+    if (key && value) {
+      process.env[key.trim()] = value.trim();
+    }
+  });
+  console.log("Loaded .env file. DATABASE_URL is " + (process.env.DATABASE_URL ? "SET" : "NOT SET"));
+} else {
+  console.log(".env file NOT FOUND at " + envPath);
+}
 
 const app = express();
 const httpServer = createServer(app);
@@ -71,6 +88,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  const { registerRoutes } = await import("./routes");
+  const { serveStatic } = await import("./static");
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {

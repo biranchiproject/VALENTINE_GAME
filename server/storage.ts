@@ -14,7 +14,7 @@ export interface IStorage {
   getOverallLeaderboard(): Promise<LeaderboardEntry[]>;
 }
 
-export class SqliteStorage implements IStorage {
+export class NeonStorage implements IStorage {
   async createRoom(insertRoom: InsertRoom): Promise<Room> {
     const [room] = await db.insert(rooms).values(insertRoom).returning();
     return room;
@@ -68,6 +68,19 @@ export class SqliteStorage implements IStorage {
   }
 
   async createLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry> {
+    const blockedKeywords = ["test", "tester", "demo", "admin", "example"];
+    const isBlocked = (name: string) => blockedKeywords.some(k => name.toLowerCase().includes(k));
+
+    if (isBlocked(entry.player1Name) || isBlocked(entry.player2Name)) {
+      console.log(`[LEADERBOARD] Blocked entry due to keywords: ${entry.player1Name} & ${entry.player2Name}`);
+      // Return a fake entry so the client thinks it succeeded (ignored)
+      return {
+        ...entry,
+        id: -1,
+        createdAt: new Date()
+      };
+    }
+
     const [newEntry] = await db.insert(leaderboard).values(entry).returning();
     return newEntry;
   }
@@ -81,16 +94,11 @@ export class SqliteStorage implements IStorage {
   }
 
   async getOverallLeaderboard(): Promise<LeaderboardEntry[]> {
-    // Aggregate by player pair names.
-    // Note: This casts the result back to LeaderboardEntry structure roughly, 
-    // but calculated fields like lovePercentage will be averages.
-    // We use raw sql because simple group by is cleaner there for this logic.
     const { sql } = await import("drizzle-orm");
 
-    // We group by player names (case insensitive roughly, or just exact for now)
-    // We'll take the MAX date as createdAt to keep types happy
-    // We'll average the lovePercentage
-    const result = await db.all(
+    // Postgres aggregation
+    // We use cast to integer for love_percentage and sum for completion_time
+    const result = await db.execute(
       sql`
         SELECT 
           MAX(id) as id, 
@@ -101,15 +109,26 @@ export class SqliteStorage implements IStorage {
           CAST(SUM(completion_time) AS INTEGER) as completion_time,
           MAX(created_at) as created_at
         FROM leaderboard 
+        WHERE 
+          NOT (LOWER(player1_name) LIKE '%test%' OR LOWER(player1_name) LIKE '%demo%' OR LOWER(player1_name) LIKE '%admin%')
+          AND
+          NOT (LOWER(player2_name) LIKE '%test%' OR LOWER(player2_name) LIKE '%demo%' OR LOWER(player2_name) LIKE '%admin%')
         GROUP BY player1_name, player2_name 
         ORDER BY love_percentage DESC, completion_time ASC
       `
     );
 
-    // Map result to match LeaderboardEntry type if needed, but db.all usually returns any.
-    // Drizzle's db.execute or similar might be safer typed, but for sqlite 'all' works well for raw.
-    // We need to cast the result rows to LeaderboardEntry manually or trust the shape matches.
-    return result.map((row: any) => ({
+    // Drizzle's execute on Postgres returns { rows: [] } usually, but with neon-serverless/drizzle it might differ.
+    // However, db.execute returns a result object. For 'drizzle-orm/neon-serverless', it returns rows directly or standard pg result.
+    // Let's assume standard behavior for now: rows are in result.rows or result itself if using simplified driver.
+    // If using 'drizzle-orm/neon-serverless', db.execute returns QueryResult.
+
+    const rows = result.rows || result;
+
+    // Safety check just in case rows is not iterable (though it should be an array)
+    if (!Array.isArray(rows)) return [];
+
+    return rows.map((row: any) => ({
       id: row.id,
       dayId: 'overall',
       player1Name: row.player1_name,
@@ -121,4 +140,4 @@ export class SqliteStorage implements IStorage {
   }
 }
 
-export const storage = new SqliteStorage();
+export const storage = new NeonStorage();
