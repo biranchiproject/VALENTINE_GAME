@@ -13,8 +13,17 @@ export type LeaderboardEntry = {
 
 export function useLeaderboard(dayId: string) {
     const isOverall = dayId === "overall";
+    const apiBase = import.meta.env.VITE_API_URL || "";
+
     return useQuery<LeaderboardEntry[]>({
         queryKey: isOverall ? ["/api/leaderboard/overall"] : [`/api/leaderboard/${dayId}`],
+        queryFn: async () => {
+            const url = `${apiBase}/api/leaderboard/${isOverall ? "overall" : dayId}`;
+            console.log("Fetching leaderboard from:", url);
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Failed to fetch leaderboard");
+            return res.json();
+        },
         enabled: !!dayId,
         refetchInterval: 15000,
     });
