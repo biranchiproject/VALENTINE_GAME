@@ -323,5 +323,16 @@ export async function registerRoutes(
     }
   });
 
+  // GET /api/leaderboard
+  app.get("/api/leaderboard", async (_req, res) => {
+    try {
+      const globalLeaderboard = await storage.getGlobalLeaderboard();
+      res.json(globalLeaderboard);
+    } catch (e) {
+      console.error("[LEADERBOARD] Fetch Global Error:", e);
+      res.status(500).json({ message: "Failed to fetch global leaderboard" });
+    }
+  });
+
   return httpServer;
 }

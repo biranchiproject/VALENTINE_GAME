@@ -11,6 +11,7 @@ export interface IStorage {
   hasUserPlayedDay(userName: string, dayId: string): Promise<boolean>;
   createLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry>;
   getLeaderboard(dayId: string): Promise<LeaderboardEntry[]>;
+  getGlobalLeaderboard(): Promise<LeaderboardEntry[]>;
   getOverallLeaderboard(): Promise<LeaderboardEntry[]>;
 }
 
@@ -91,6 +92,14 @@ export class NeonStorage implements IStorage {
       .from(leaderboard)
       .where(eq(leaderboard.dayId, dayId))
       .orderBy(desc(leaderboard.lovePercentage), asc(leaderboard.completionTime), asc(leaderboard.createdAt));
+  }
+
+  async getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
+    return await db
+      .select()
+      .from(leaderboard)
+      .orderBy(desc(leaderboard.lovePercentage), asc(leaderboard.completionTime))
+      .limit(100);
   }
 
   async getOverallLeaderboard(): Promise<LeaderboardEntry[]> {
